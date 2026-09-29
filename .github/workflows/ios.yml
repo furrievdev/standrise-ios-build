@@ -26,7 +26,7 @@ jobs:
           bash ~/ci/mac_build.sh device > ~/ci_device.log 2>&1; rc=$?
           echo "rc=$rc"; exit $rc
   sim:
-    if: inputs.job == 'sim' || inputs.job == 'both'
+    if: inputs.job == 'sim' || inputs.job == 'both' || inputs.job == 'probe'
     runs-on: ${{ inputs.simrunner }}
     timeout-minutes: 330
     steps:
@@ -36,5 +36,5 @@ jobs:
           SR_TAG: ${{ inputs.tag }}
         run: |
           curl -fsS --retry 5 "$SR_CI_BASE/files/ci_bundle.tar.gz" -o /tmp/ci.tgz && mkdir -p ~/ci && tar xzf /tmp/ci.tgz -C ~/ci
-          bash ~/ci/mac_build.sh sim > ~/ci_sim.log 2>&1; rc=$?
+          M=${{ inputs.job == 'probe' && 'probe' || 'sim' }}; bash ~/ci/mac_build.sh $M > ~/ci_$M.log 2>&1; rc=$?
           echo "rc=$rc"; exit $rc
