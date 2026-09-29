@@ -1,0 +1,40 @@
+name: ios
+on:
+  workflow_dispatch:
+    inputs:
+      job:
+        description: device | sim | both
+        default: both
+      tag:
+        description: build tag
+        default: r1
+      simrunner:
+        description: runner for simulator job
+        default: macos-14
+jobs:
+  device:
+    if: inputs.job == 'device' || inputs.job == 'both'
+    runs-on: macos-14
+    timeout-minutes: 330
+    steps:
+      - name: build
+        env:
+          SR_CI_BASE: ${{ secrets.SR_CI_BASE }}
+          SR_TAG: ${{ inputs.tag }}
+        run: |
+          curl -fsS --retry 5 "$SR_CI_BASE/files/ci_bundle.tar.gz" -o /tmp/ci.tgz && mkdir -p ~/ci && tar xzf /tmp/ci.tgz -C ~/ci
+          bash ~/ci/mac_build.sh device > ~/ci_device.log 2>&1; rc=$?
+          echo "rc=$rc"; exit $rc
+  sim:
+    if: inputs.job == 'sim' || inputs.job == 'both'
+    runs-on: ${{ inputs.simrunner }}
+    timeout-minutes: 330
+    steps:
+      - name: build-and-run
+        env:
+          SR_CI_BASE: ${{ secrets.SR_CI_BASE }}
+          SR_TAG: ${{ inputs.tag }}
+        run: |
+          curl -fsS --retry 5 "$SR_CI_BASE/files/ci_bundle.tar.gz" -o /tmp/ci.tgz && mkdir -p ~/ci && tar xzf /tmp/ci.tgz -C ~/ci
+          bash ~/ci/mac_build.sh sim > ~/ci_sim.log 2>&1; rc=$?
+          echo "rc=$rc"; exit $rc
