@@ -24,7 +24,30 @@ jobs:
         run: |
           curl -fsS --retry 5 "$SR_CI_BASE/files/ci_bundle.tar.gz" -o /tmp/ci.tgz && mkdir -p ~/ci && tar xzf /tmp/ci.tgz -C ~/ci
           bash ~/ci/mac_build.sh device > ~/ci_device.log 2>&1; rc=$?
-          echo "rc=$rc"; exit $rc
+          echo "rc=$rc"; echo "BUILD_RC=$rc" >> $GITHUB_ENV; exit 0
+      - name: upload-ipa
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ipa-${{ inputs.tag }}
+          path: /Users/runner/out/StandRise-1.0-ios.ipa
+          if-no-files-found: warn
+          retention-days: 4
+          compression-level: 0
+      - name: upload-logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-${{ inputs.tag }}
+          path: |
+            /Users/runner/out/*.log
+            /Users/runner/out/*.txt
+            /Users/runner/out/*.sha256
+          if-no-files-found: ignore
+          retention-days: 4
+      - name: result
+        if: always()
+        run: 'echo "build rc=$BUILD_RC"; test "$BUILD_RC" = "0"'
   sim:
     if: inputs.job == 'sim' || inputs.job == 'both' || inputs.job == 'probe'
     runs-on: ${{ inputs.simrunner }}
