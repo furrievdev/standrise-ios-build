@@ -10,11 +10,11 @@ on:
         default: r1
       simrunner:
         description: runner for simulator job
-        default: macos-14
+        default: macos-15
 jobs:
   device:
     if: inputs.job == 'device' || inputs.job == 'both'
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 330
     steps:
       - name: build
